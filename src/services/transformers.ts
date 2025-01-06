@@ -124,7 +124,7 @@ export const transformZeptoData = (data: any, eta: string): Product[] => {
             dlUrl: `https://www.zepto.in/p/${productData.id}`,
             display_name: productData.product.name,
             imgUrl: variant.images?.[0]
-              ? `https://cdn.zeptonow.com/production///tr:w-400,ar-804-748,pr-true,f-auto,q-80/${variant?.images?.[0]?.path}`
+              ? `https://cdn.zeptonow.com/production/tr:w-400,ar-804-748,pr-true,f-auto,q-80/${variant?.images?.[0]?.path}`
               : "",
             platform: ZeptoLogo, // Replace with actual Zepto logo/constant
           };
