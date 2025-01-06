@@ -1,10 +1,5 @@
 import { Product } from "../types";
-import {
-  getBlinkitHeaders,
-  getInstamartHeaders,
-  getFlipkartHeaders,
-  getInstamartBody,
-} from "./header";
+import { getBlinkitHeaders, getInstamartHeaders } from "./header";
 import { transformBlinkitData, transformInstamartData } from "./transformers";
 const BLINKIT_API_URL = "/api/blinkit/layout/search";
 const INSTAMART_API_URL = "/api/instamart/search";

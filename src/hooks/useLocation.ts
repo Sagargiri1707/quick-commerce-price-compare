@@ -29,7 +29,7 @@ export function useLocation() {
           setLocation(newLocation);
           setLoading(false);
         },
-        (error) => {
+        () => {
           setError("Please enable location access to see nearby stores");
           setLoading(false);
         }

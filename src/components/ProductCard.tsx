@@ -19,20 +19,32 @@ const Platform = styled.div`
   position: absolute;
   top: 12px;
   right: 12px;
-  background: #e6f3ff;
-  color: #0066cc;
-  padding: 4px 12px;
-  border-radius: 16px;
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: capitalize;
+  height: 24px;
+  width: 60px;
+  background: white;
+  padding: 4px;
+  border-radius: 4px;
+
+  img,
+  svg {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
 `;
 
-const ProductImage = styled.img`
+const ProductImage = styled.div`
   width: 100%;
   height: 200px;
-  object-fit: cover;
   border-radius: 12px 12px 0 0;
+  overflow: hidden;
+
+  img,
+  svg {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 `;
 
 const Content = styled.div`
@@ -64,20 +76,41 @@ const Time = styled.div`
   font-style: italic;
 `;
 
-const ProductCard = ({ product }) => {
+const ProductCard = ({
+  product,
+}: {
+  product: {
+    dlUrl: string;
+    platform: string;
+    imgUrl: string;
+    name: string;
+    display_name: string;
+    price: number;
+    weight?: string;
+    time: string;
+  };
+}) => {
   const handleClick = () => {
     window.location.href = product.dlUrl;
   };
-
+  const PlatformLogo = product.platform;
   return (
     <Card onClick={handleClick}>
-      <Platform>{product.platform}</Platform>
-      <ProductImage src={product.imgUrl} alt={product.name} />
+      <Platform>
+        <PlatformLogo />
+      </Platform>
+      <ProductImage>
+        {typeof product.imgUrl === "string" ? (
+          <img src={product.imgUrl} alt={product.name} />
+        ) : (
+          product.imgUrl
+        )}
+      </ProductImage>
       <Content>
         <ProductName>{product.display_name}</ProductName>
-        <Price>{product.price}</Price>
-        {product.weight && <Weight>Weight: {product.weight}</Weight>}
-        <Time>Delivery: {product.time}</Time>
+        <Price>₹{product.price}</Price>
+        {product.weight && <Weight> {product.weight}</Weight>}
+        <Time>Delivery in {product.time}</Time>
       </Content>
     </Card>
   );
