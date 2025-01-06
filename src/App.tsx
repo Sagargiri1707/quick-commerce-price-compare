@@ -33,7 +33,7 @@ function App() {
     if (!location) return;
 
     setLoading(true);
-    const results = await searchProducts(query);
+    const results = await searchProducts(query, location);
     setProducts(results);
     setLoading(false);
   };

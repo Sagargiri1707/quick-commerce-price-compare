@@ -1,11 +1,20 @@
 import { Product } from "../types";
-import { getBlinkitHeaders, getInstamartHeaders } from "./header";
-import { transformBlinkitData, transformInstamartData } from "./transformers";
+import {
+  getBlinkitHeaders,
+  getInstamartHeaders,
+  getZeptoHeaders,
+} from "./header";
+import { Location } from "../types";
+import {
+  transformBlinkitData,
+  transformInstamartData,
+  transformZeptoData,
+} from "./transformers";
 const BLINKIT_API_URL = "/api/blinkit/layout/search";
 const INSTAMART_API_URL = "/api/instamart/search";
 const INSTAMART_STORE_URL = "/api/instamart/home?clientId=INSTAMART-APP";
-// const FLIPKART_API_URL = "https://flipkart.com/api/v1/search";
-// const BLINKIT_API_URL = "https://blinkit.com/v1/layout/search";
+const ZEPTO_CONFIG_URL = "api/zepto/v1/config/layout";
+const ZEPTO_API_URL = "/api/zepto/v3/search";
 async function fetchBlinkitProducts(query: string): Promise<Product[]> {
   try {
     const response = await fetch(
@@ -73,37 +82,108 @@ async function fetchInstamartProducts(query: string): Promise<Product[]> {
   }
 }
 
-// async function fetchFlipkartProducts(query: string): Promise<Product[]> {
-//   try {
-//     const response = await fetch(
-//       `${FLIPKART_API_URL}?q=${encodeURIComponent(query)}`,
-//       {
-//         headers: {
-//           Authorization: process.env.FLIPKART_API_KEY || "",
-//         },
-//       }
-//     );
-//     if (!response.ok) throw new Error("Flipkart API error");
-//     const data = await response.json();
-//     return transformFlipkartData(data);
-//   } catch (error) {
-//     console.error("Flipkart fetch error:", error);
-//     return [];
-//   }
-// }
-
-export async function searchProducts(query: string): Promise<Product[]> {
+async function getZeptoStoreLocation(
+  location: Location
+): Promise<{ storeId: string; eta: string }> {
   try {
-    const [blinkitProducts, instamartProducts] =
+    const params = new URLSearchParams({
+      latitude: location.lat.toString(),
+      longitude: location.lon.toString(),
+      page_type: "HOME",
+      version: "v2",
+      show_new_eta_banner: "false",
+      page_size: "10",
+    });
+
+    const response = await fetch(`${ZEPTO_CONFIG_URL}/?${params}`, {
+      headers: getZeptoHeaders(),
+    });
+
+    if (!response.ok) throw new Error("Zepto store location API error");
+
+    const data = await response.json();
+    const storeId = data?.storeServiceableResponseV2?.[0]?.storeId;
+    if (!storeId) {
+      return { storeId: "", eta: "" };
+    }
+    let eta = "";
+    if (data?.pageLayout?.widgets) {
+      const etaBanner = data.pageLayout.widgets.find(
+        (widget: any) => widget.widgetType === "ETA_BANNER_WIDGET"
+      );
+      eta = etaBanner?.data?.eta || "";
+    }
+
+    console.log("ETA found:", eta);
+
+    return { storeId, eta };
+  } catch (error) {
+    console.error("Zepto store location fetch error:", error);
+    return { storeId: "", eta: "" };
+  }
+}
+
+async function fetchZeptoProducts(
+  query: string,
+  location: Location
+): Promise<Product[]> {
+  try {
+    const { storeId: zeptoStoreId, eta } = await getZeptoStoreLocation(
+      location
+    );
+
+    const headers = {
+      ...getZeptoHeaders(),
+      accept: "application/json, text/plain, */*",
+      app_sub_platform: "WEB",
+      app_version: "12.25.0",
+      appversion: "12.25.0",
+      platform: "WEB",
+      store_id: zeptoStoreId,
+      store_ids: zeptoStoreId,
+      storeid: zeptoStoreId,
+      tenant: "ZEPTO",
+      "x-without-bearer": "true",
+    };
+
+    const body = {
+      query,
+      pageNumber: 0,
+      mode: "AUTOSUGGEST",
+      intentId: crypto.randomUUID(), // Generate a random UUID for intentId
+    };
+    const bodyString = JSON.stringify(body);
+
+    const response = await fetch(ZEPTO_API_URL, {
+      method: "POST",
+      headers,
+      body: bodyString,
+    });
+
+    if (!response.ok) throw new Error("Zepto API error");
+    const data = await response.json();
+    console.log(data, "sepr");
+    return transformZeptoData(data?.layout || [], eta); // You'll need to create this transformer
+  } catch (error) {
+    console.error("Zepto fetch error:", error);
+    return [];
+  }
+}
+
+export async function searchProducts(
+  query: string,
+  location: Location
+): Promise<Product[]> {
+  try {
+    const [blinkitProducts, instamartProducts, zeptoProducts] =
       // , instamartProducts, flipkartProducts] =
       await Promise.all([
         fetchBlinkitProducts(query),
         fetchInstamartProducts(query),
-        // fetchFlipkartProducts(query),
+        fetchZeptoProducts(query, location),
       ]);
 
-    return [...blinkitProducts, ...instamartProducts];
-    //...instamartProducts, ...flipkartProducts];
+    return [...blinkitProducts, ...instamartProducts, ...zeptoProducts];
   } catch (error) {
     console.error("Search error:", error);
     return [];

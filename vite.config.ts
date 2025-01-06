@@ -19,6 +19,11 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/instamart/, ""),
       },
+      "/api/zepto": {
+        target: "https://api.zeptonow.com/api",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/zepto/, ""),
+      },
     },
   },
 });

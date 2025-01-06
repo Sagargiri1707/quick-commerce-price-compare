@@ -1,5 +1,6 @@
 import { BlinkitLogo } from "../components/BlinkitLogo";
 import { InstamartLogo } from "../components/InstamartLogo";
+import { ZeptoLogo } from "../components/ZeptoLogo";
 import { Product, InstamartItem, InstamartProduct } from "../types";
 
 // Helper functions
@@ -94,6 +95,47 @@ export const transformInstamartData = (
     return sortByPrice(products);
   } catch (error) {
     console.error("Error transforming Instamart data:", error);
+    return [];
+  }
+};
+
+export const transformZeptoData = (data: any, eta): Product[] => {
+  try {
+    // Find all PRODUCT_GRID widgets
+    const productGridWidgets = data.filter(
+      (widget: any) => widget.widgetId === "PRODUCT_GRID"
+    );
+
+    // Consolidate items from all widgets
+    const allProducts = productGridWidgets
+      .flatMap((widget: any) => {
+        const items = widget.data?.resolver?.data?.items || [];
+        return items.map((item: any) => {
+          const productData = item.productResponse;
+          if (!productData) return null;
+
+          const variant = productData.productVariant;
+          return {
+            name: productData.product.name,
+            price: (productData.discountedSellingPrice / 100).toString(),
+            weight:
+              variant.formattedPacksize || variant.weightInGms?.toString(),
+            time: "30-40 mins", // Default delivery time for Zepto
+            dlUrl: `https://www.zepto.in/p/${productData.id}`,
+            display_name: productData.product.name,
+            imgUrl: variant.images?.[0]
+              ? `https://cdn.zeptonow.com/production///tr:w-400,ar-804-748,pr-true,f-auto,q-80/${variant?.images?.[0]?.path}`
+              : "",
+            platform: ZeptoLogo, // Replace with actual Zepto logo/constant
+          };
+        });
+      })
+      .filter((product: null) => product !== null)
+      .slice(0, 5); // Take first 5 products from consolidated list
+
+    return sortByPrice(allProducts);
+  } catch (error) {
+    console.error("Error transforming Zepto data:", error);
     return [];
   }
 };
