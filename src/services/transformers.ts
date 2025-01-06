@@ -99,7 +99,7 @@ export const transformInstamartData = (
   }
 };
 
-export const transformZeptoData = (data: any, eta): Product[] => {
+export const transformZeptoData = (data: any, eta: string): Product[] => {
   try {
     // Find all PRODUCT_GRID widgets
     const productGridWidgets = data.filter(
@@ -120,7 +120,7 @@ export const transformZeptoData = (data: any, eta): Product[] => {
             price: (productData.discountedSellingPrice / 100).toString(),
             weight:
               variant.formattedPacksize || variant.weightInGms?.toString(),
-            time: "30-40 mins", // Default delivery time for Zepto
+            time: eta, // Default delivery time for Zepto
             dlUrl: `https://www.zepto.in/p/${productData.id}`,
             display_name: productData.product.name,
             imgUrl: variant.images?.[0]

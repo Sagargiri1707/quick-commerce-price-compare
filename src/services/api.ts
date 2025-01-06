@@ -12,15 +12,16 @@ import {
 } from "./transformers";
 const BLINKIT_API_URL = "/api/blinkit/layout/search";
 const INSTAMART_API_URL = "/api/instamart/search";
+const ZEPTO_API_URL = "/api/zepto/v3/search";
+
 const INSTAMART_STORE_URL = "/api/instamart/home?clientId=INSTAMART-APP";
 const ZEPTO_CONFIG_URL = "api/zepto/v1/config/layout";
-const ZEPTO_API_URL = "/api/zepto/v3/search";
 async function fetchBlinkitProducts(query: string): Promise<Product[]> {
   try {
     const response = await fetch(
       `${BLINKIT_API_URL}?q=${encodeURIComponent(
         query
-      )}&search_type=type_to_search`,
+      )}&search_type=auto_suggest`,
       {
         headers: getBlinkitHeaders(),
         method: "POST",
@@ -162,7 +163,6 @@ async function fetchZeptoProducts(
 
     if (!response.ok) throw new Error("Zepto API error");
     const data = await response.json();
-    console.log(data, "sepr");
     return transformZeptoData(data?.layout || [], eta); // You'll need to create this transformer
   } catch (error) {
     console.error("Zepto fetch error:", error);
@@ -183,7 +183,9 @@ export async function searchProducts(
         fetchZeptoProducts(query, location),
       ]);
 
-    return [...blinkitProducts, ...instamartProducts, ...zeptoProducts];
+    return [...blinkitProducts, ...instamartProducts, ...zeptoProducts].sort(
+      (a, b) => Number(a.price) - Number(b.price)
+    );
   } catch (error) {
     console.error("Search error:", error);
     return [];

@@ -24,6 +24,11 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/zepto/, ""),
       },
+      "/api/bigbasket": {
+        target: "https://bbnow.bigbasket.com",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/bigbasket/, ""),
+      },
     },
   },
 });
